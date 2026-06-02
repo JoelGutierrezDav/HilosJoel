@@ -82,7 +82,8 @@ export default function InventoryPage({ products, onProductsChange }) {
           </button>
         </div>
 
-        <div className="table-wrap">
+        {/* Tabla — desktop */}
+        <div className="table-wrap desktop-only">
           <table>
             <thead>
               <tr>
@@ -119,6 +120,45 @@ export default function InventoryPage({ products, onProductsChange }) {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Tarjetas — mobile */}
+        <div className="cards-list mobile-only">
+          {filtered.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon"><Icon name="spool" size={40} /></div>
+              <p>{search ? 'No se encontraron productos' : 'Todavía no hay productos. ¡Agregá el primero!'}</p>
+            </div>
+          ) : filtered.map((p) => (
+            <div className="prod-card" key={p.id}>
+              <div className="prod-card-top">
+                <div>
+                  <div className="prod-card-name">{p.name}</div>
+                  <div className="prod-card-meta">
+                    <span className="code-badge">{p.code || '—'}</span>
+                    <span className="prod-cat">{p.category || '—'}</span>
+                  </div>
+                </div>
+                <div className="prod-card-actions">
+                  <button className="btn-icon sell" title="Registrar venta" onClick={() => setSellProduct(p)}><Icon name="minus" size={14} /></button>
+                  <button className="btn-icon" title="Editar" onClick={() => setEditProduct(p)}><Icon name="edit" size={14} /></button>
+                  <button className="btn-icon danger" title="Eliminar" onClick={() => setDeleteProduct(p)}><Icon name="trash" size={14} /></button>
+                </div>
+              </div>
+              <div className="prod-card-bottom">
+                <div className="prod-card-stat">
+                  <span className="prod-card-stat-label">Precio</span>
+                  <span className="price">${p.price.toLocaleString('es-AR')}</span>
+                </div>
+                <div className="prod-card-stat">
+                  <span className="prod-card-stat-label">Stock</span>
+                  <span className={`stock ${p.stock === 0 ? 'out' : p.stock <= 5 ? 'low' : ''}`}>{p.stock}</span>
+                  {p.stock <= 5 && p.stock > 0 && <span className="badge-low"><Icon name="warning" size={10} /> Poco</span>}
+                  {p.stock === 0 && <span className="badge-low" style={{ background: 'rgba(255,71,87,.1)', color: 'var(--danger)' }}>Sin stock</span>}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
