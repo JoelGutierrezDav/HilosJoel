@@ -3,10 +3,10 @@ import { Icon, ThreadSpool } from '../components/Icons'
 import { getUsers, saveUsers } from '../db/storage'
 
 export default function AuthPage({ onLogin }) {
-  const [tab,   setTab]   = useState('login')
-  const [form,  setForm]  = useState({ username: '', password: '' })
-  const [error, setError] = useState('')
-  const [busy,  setBusy]  = useState(false)
+  const [form,      setForm]      = useState({ username: '', password: '' })
+  const [error,     setError]     = useState('')
+  const [busy,      setBusy]      = useState(false)
+  const [showPass,  setShowPass]  = useState(false)
 
   const handle = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
 
@@ -18,26 +18,11 @@ export default function AuthPage({ onLogin }) {
     setBusy(true)
     try {
       const users = await getUsers()
-
-      if (tab === 'register') {
-        if (form.password.length < 6)
-          return setError('La contraseña debe tener al menos 6 caracteres.')
-        if (users.find((u) => u.username.toLowerCase() === form.username.toLowerCase()))
-          return setError('Ese nombre de usuario ya existe.')
-        const newUser = {
-          id:       Date.now().toString(),
-          username: form.username.trim(),
-          password: form.password,
-        }
-        await saveUsers([...users, newUser])
-        onLogin(newUser)
-      } else {
-        const user = users.find(
-          (u) => u.username.toLowerCase() === form.username.toLowerCase() && u.password === form.password
-        )
-        if (!user) return setError('Usuario o contraseña incorrectos.')
-        onLogin(user)
-      }
+      const user  = users.find(
+        (u) => u.username.toLowerCase() === form.username.toLowerCase() && u.password === form.password
+      )
+      if (!user) return setError('Usuario o contraseña incorrectos.')
+      onLogin(user)
     } catch {
       setError('Error de conexión. Revisá tu internet.')
     } finally {
@@ -58,17 +43,8 @@ export default function AuthPage({ onLogin }) {
           </div>
         </div>
 
-        <div className="auth-title">{tab === 'login' ? 'Bienvenido de vuelta' : 'Crear cuenta'}</div>
-        <div className="auth-sub">{tab === 'login' ? 'Iniciá sesión para gestionar el inventario' : 'Registrate para empezar'}</div>
-
-        <div className="auth-tabs">
-          <button className={`auth-tab ${tab === 'login' ? 'active' : ''}`} onClick={() => { setTab('login'); setError('') }}>
-            Iniciar sesión
-          </button>
-          <button className={`auth-tab ${tab === 'register' ? 'active' : ''}`} onClick={() => { setTab('register'); setError('') }}>
-            Registrarse
-          </button>
-        </div>
+        <div className="auth-title">Bienvenido de vuelta</div>
+        <div className="auth-sub">Iniciá sesión para gestionar el inventario</div>
 
         {error && <div className="error-msg"><Icon name="warning" size={16} /> {error}</div>}
 
@@ -76,19 +52,57 @@ export default function AuthPage({ onLogin }) {
           <label>Nombre de usuario</label>
           <div className="field-inner">
             <span className="field-icon"><Icon name="user" size={16} /></span>
-            <input name="username" placeholder="Ej: joel, maria123..." value={form.username} onChange={handle} autoComplete="username" />
+            <input
+              name="username"
+              placeholder="Ej: joel..."
+              value={form.username}
+              onChange={handle}
+              autoComplete="username"
+            />
           </div>
         </div>
+
         <div className="field">
           <label>Contraseña</label>
           <div className="field-inner">
             <span className="field-icon"><Icon name="lock" size={16} /></span>
-            <input name="password" type="password" placeholder="••••••••" value={form.password} onChange={handle} onKeyDown={(e) => e.key === 'Enter' && submit()} autoComplete="current-password" />
+            <input
+              name="password"
+              type={showPass ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={form.password}
+              onChange={handle}
+              onKeyDown={(e) => e.key === 'Enter' && submit()}
+              autoComplete="current-password"
+              style={{ paddingRight: 44 }}
+            />
+            <button
+              onClick={() => setShowPass((v) => !v)}
+              style={{
+                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: showPass ? 'var(--accent)' : 'var(--muted)', padding: 0,
+                display: 'flex', alignItems: 'center',
+              }}
+            >
+              {showPass ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              )}
+            </button>
           </div>
         </div>
 
         <button className="btn-primary" onClick={submit} disabled={busy}>
-          {busy ? 'Conectando...' : tab === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
+          {busy ? 'Conectando...' : 'Iniciar sesión'}
         </button>
       </div>
     </div>
